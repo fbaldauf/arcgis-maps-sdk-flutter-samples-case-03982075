@@ -15,11 +15,14 @@
 //
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:arcgis_maps/arcgis_maps.dart';
 import 'package:arcgis_maps_sdk_flutter_samples/common/common.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ShowDeviceLocation extends StatefulWidget {
   const ShowDeviceLocation({super.key});
@@ -187,6 +190,8 @@ class _ShowDeviceLocationState extends State<ShowDeviceLocation>
       BasemapStyle.arcGISNavigationNight,
     );
 
+    _locationDataSource.enableBackgroundLocationUpdates(true);
+
     // Set the initial system location data source and auto-pan mode.
     _mapViewController.locationDisplay.dataSource = _locationDataSource;
     _mapViewController.locationDisplay.autoPanMode =
@@ -213,6 +218,32 @@ class _ShowDeviceLocationState extends State<ShowDeviceLocation>
     } on ArcGISException catch (e) {
       showMessageDialog(e.message);
     }
+
+    if (!Platform.isAndroid) {
+      throw Exception('This bug is only relevant for Android');
+    }
+
+    // we have to show the user a notification when accessing the location in foreground mode.
+    if ((await Permission.notification.request()) != PermissionStatus.granted) {
+      throw Exception('Please allow Notifications');
+    }
+
+    // Our app wants to log location data even when the app is minimized
+    // We use the geolocator package to create a position stream
+    // Since the ArcGIS SDK uses this dependency, it overwrites the text content of the notification
+    final stream = GeolocatorPlatform.instance.getPositionStream(
+      locationSettings: AndroidSettings(
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'THIS WILL BE OVERWRITTEN BY THE ARCGIS SDK',
+          notificationText: 'THIS WILL ALSO BE OVERWRITTEN BY THE ARCGIS SDK',
+          setOngoing: true,
+        ),
+      ),
+    );
+    final subscription = stream.listen((position) {
+      // do something while the app is minimized
+      print("T");
+    });
 
     // Set the ready state variable to true to enable the UI.
     setState(() => _ready = true);
