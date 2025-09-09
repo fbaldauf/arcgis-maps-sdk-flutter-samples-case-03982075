@@ -228,6 +228,21 @@ class _ShowDeviceLocationState extends State<ShowDeviceLocation>
       throw Exception('Please allow Notifications');
     }
 
+    // Request location permissions
+    if ((await Permission.location.request()) != PermissionStatus.granted) {
+      throw Exception('Please allow permission to use location');
+    }
+
+    // Request "always" location permission so we can access location in the background
+    if ((await Permission.locationAlways.request()) !=
+        PermissionStatus.granted) {
+      await openAppSettings();
+      if ((await Permission.locationAlways.request()) !=
+          PermissionStatus.granted) {
+        throw Exception('Please allow permission to always use location');
+      }
+    }
+
     // Our app wants to log location data even when the app is minimized
     // We use the geolocator package to create a position stream
     // Since the ArcGIS SDK uses this dependency, it overwrites the text content of the notification

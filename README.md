@@ -5,6 +5,7 @@
 - Create env.json with an API_KEY 
 - Run the 'Custom Sample' Configuration on Android
 - Allow Notifications
+- Allow Background Location
 
 Actual behaviour:
 - You see a Notification with the text `Example app 2 will continue to receive...`.
